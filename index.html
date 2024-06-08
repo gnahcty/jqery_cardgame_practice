@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Alfa+Slab+One&family=Dela+Gothic+One&family=Mochiy+Pop+P+One&family=Secular+One&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+  <link rel="stylesheet" href="./style.css" />
+  <title>Document</title>
+</head>
+
+<body>
+  <!-- <img id="man" src="./cropped/bman.png"> -->
+  <!-- <img src="title.svg"> -->
+
+  <div id="startBtn">
+    <div>Help Dave get dressed in the correct order!</div>
+    <div>start</div>
+  </div>
+  <div id="game">
+
+  </div>
+  <div id="avatar">
+    <div id="countdown"><span id="mm">00</span>:<span id="ss">00</span> </div>
+    <img src="./img/man.png">
+  </div>
+
+  <div id="score" class="animate__slideInRight">
+    Score: <span id="scoreText">00</span>
+    <div id="ok">ok</div>
+  </div>
+
+  <script src="./jquery-3.6.4.min.js"></script>
+  <script>
+    // window.onload = () => {
+    // $('#man').addClass('entrance')
+    // setTimeout(() => {
+    //   $('#text').css('opacity', '1')
+    // }, 5000)
+    // setTimeout(() => {
+    $('#startBtn').css('opacity', '1')
+    // }, 6000)
+    // }
+
+    // 計分用的陣列
+    let arr1 = [], arr2 = []
+
+    // append 12 cards to #game
+    for (let i = 0; i < 12; i++) {
+      $('#game').append(`
+        <div class="card close">
+            <div class="cardFront"><img src="./img/1.png"></div>
+            <div class="cardBack"><img src="./img/cat.png"></div>
+        </div>
+            `)
+    }
+
+    for (let i = 0; i < 12; i++) {
+      // set the front of the cards
+      $('.card').eq(i).find('.cardFront img').attr('src', `./cropped/${i + 1}.png`)
+      // assign their IDs to data-card
+      $('.card').eq(i).attr('data-card', i + 1)
+      // 洗牌
+      const target = Math.round(Math.random() * 11)
+      $('.card').eq(target).insertAfter($('.card').eq(i))
+    }
+
+    $('#startBtn').on('click', function () {
+      // 清空計分用的陣列
+      arr1 = []
+      arr2 = []
+      $('#startBtn').css('display', 'none')
+      // $('#man').css('display', 'none')
+      $('#text').css('display', 'none')
+      $('#mm').text('01')
+
+      // open cards
+      $('.card').each(function (i, card) {
+        $(this).removeClass('close')
+      })
+
+      setTimeout(function () {
+        // close cards after 3s
+        $('.card').each(function (i, card) {
+          $(this).addClass('close')
+        })
+        /** set countdown timer **/
+        // starting countdown time
+        $('#mm').text('00')
+        $('#ss').text('59')
+        let s = 59
+        let interval = setInterval(function () {
+          //countdown timer
+          $('#ss').text(String(s--).padStart(2, '0'))
+
+          // if countdown is over or all cards are opened
+          if ($('#ss').text() == 0 || $('.close').length == 0) {
+            $('#countdown').css('display', 'none')
+            $('#game').css('width', '0px')
+            $('#game').css('transition', '0.5s')
+            $('#score').css('display', 'flex')
+            clearInterval(interval)
+            $('#scoreText').text(scoring(s, $('.close').length, arr1, arr2))
+          }
+        }, 1000)
+      }, 3000)
+    })
+
+    $('#game').on('click', '.card', function () {
+      // open card
+      $(this).removeClass('close')
+
+      let i = $(this).attr('data-card')
+      // 將卡片依照數字分成兩區分開評分
+      if (i <= 5) {
+        arr1.push(i)
+      } else if (i > 5 && i <= 9) {
+        arr2.push(i)
+      }
+      // dave wears the clothing
+      $('#avatar').append('<img src=`./img/1.png`>')
+      $('#avatar img').last().attr('src', `./img/${i}.png`)
+    })
+
+    $('#ok').on('click', function () {
+      location.reload()
+    })
+
+    function scoring (s, closedLength, arr1, arr2) {
+      s = s >= 40 ? 0 : (39 - s) //剩餘秒數大於40不扣分，少於40則少一秒扣一分
+      // 滿分100分，扣掉剩餘秒數，扣掉剩餘卡片數*5，扣掉arr1排序次數*5，扣掉arr2排序次數*5
+      return (100 - s - (closedLength * 5) - sort(arr1) - sort(arr2))
+    }
+
+    // 根據bubble sort的次數計算分數
+    function sort (arr) {
+      let count = 0
+      for (let i = 1; i < arr.length; i++) {
+        let target = i
+        for (let j = i - 1; j >= 0; j--) {
+          if (arr[target] < arr[j]) {
+            [arr[target], arr[j]] = [arr[j], arr[target]]
+            count++
+            target = j
+          }
+        }
+      }
+      return count * 5
+    }
+  </script>
+</body>
+
+</html>
